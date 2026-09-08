@@ -1,0 +1,29 @@
+# 音律 music-player compose 示例(自用局域网)
+# 用法: docker compose up -d
+#   或 docker run -d --name music-player --restart unless-stopped -p 8090:8090 \
+#       -e MUSIC_LIBRARY_PATH=/music -e MUSIC_CDLIB_PATH=/tracker \
+#       -v music_data:/data -v /mnt/wd200/music:/music:ro -v /mnt/wd200/tracker:/tracker:ro \
+#       mooloco/music-player:latest
+services:
+  music-player:
+    image: mooloco/music-player:latest
+    build: .
+    container_name: music-player
+    restart: unless-stopped
+    ports:
+      - "8090:8090"
+    environment:
+      # 首次启动且 /data 无库文件时,后台自动扫描;此后重启不重扫(库已持久化)
+      MUSIC_LIBRARY_PATH: /music
+      MUSIC_CDLIB_PATH: /tracker
+      MUSIC_COVER_MEM_MB: "128"      # 封面内存 LRU 上限,大内存机器可调大
+      TZ: Asia/Shanghai
+    volumes:
+      - music_data:/data              # 索引/收藏/播放列表/封面缓存(必须持久化)
+      - /mnt/wd200/music:/music:ro    # 媒体库,按实际路径修改
+      - /mnt/wd200/tracker:/tracker:ro
+    # 需要非 root 运行时取消注释(注意 /data 卷属主需与该 uid 匹配)
+    # user: "1000:1000"
+
+volumes:
+  music_data:

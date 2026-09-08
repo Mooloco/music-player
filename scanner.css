@@ -1,0 +1,1 @@
+.scan-status{grid-column:1/-1;min-height:18px;margin:13px 0 0;color:var(--muted-2);font-size:12px}.scan-status.success{color:var(--accent-text)}.scan-status.error{color:var(--danger)}.scan-button:disabled{cursor:wait;opacity:.65}

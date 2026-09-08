@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>音律 · 音乐库</title>
+    <script>try{var t=localStorage.getItem('theme');document.documentElement.dataset.theme=(t==='light'||t==='dark')?t:'light'}catch(e){document.documentElement.dataset.theme='light'}</script>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="stylesheet" href="fonts.css" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="overrides.css" />
+    <link rel="stylesheet" href="scanner.css" />
+    <link rel="stylesheet" href="playback.css" />
+    <link rel="stylesheet" href="refine.css" />
+    <link rel="stylesheet" href="lyrics.css" />
+    <link rel="stylesheet" href="search.css" />
+    <link rel="stylesheet" href="playlist.css" />
+    <link rel="stylesheet" href="cd.css" />
+  </head>
+  <body>
+    <!-- 入口页：等待 3 秒后淡出，给后台音乐库加载留时间 -->
+    <div id="splash" aria-hidden="false">
+      <div class="splash-inner">
+        <h1 class="splash-brand">Mooloco <em>Music</em></h1>
+        <p class="splash-sub">正在进入首页</p>
+      </div>
+    </div>
+    <aside class="sidebar" aria-label="主导航">
+      <nav>
+        <button class="nav-item active" id="libraryNav" type="button" aria-label="首页"><span>⌂</span><b>首页</b></button>
+        <button class="nav-item" id="favoritesNav" type="button" aria-label="收藏"><span>♡</span><b>收藏</b></button>
+        <button class="nav-item" id="playlistsNav" type="button" aria-label="歌单"><span>▤</span><b>歌单</b></button>
+        <button class="nav-item" id="cdNav" type="button" aria-label="CD库"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6.5" fill="#18191b"/><circle cx="12" cy="12" r="2.6" fill="currentColor"/></svg></span><b>CD库</b></button>
+      </nav>
+    </aside>
+
+    <main class="app-shell">
+      <header class="topbar">
+        <div class="page-label"><span class="eyebrow" id="pageEyebrow">Mooloco媒体服务器</span><h1 id="pageTitle">音乐库</h1></div>
+        <div class="top-actions">
+          <button class="now-playing-btn" id="nowPlayingButton" type="button" title="跳到正在播放的歌曲"><svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor" aria-hidden="true"><rect x="1" y="5" width="3" height="6" rx="1"/><rect x="6.5" y="2" width="3" height="12" rx="1"/><rect x="12" y="7" width="3" height="2" rx="1"/></svg><span>正在播放</span></button>
+          <button class="icon-button" id="searchButton" aria-label="搜索">⌕</button>
+          <button class="icon-button" id="settingsButton" type="button" aria-label="设置">⚙</button>
+        </div>
+      </header>
+
+      <section class="content">
+        <div class="tabs" role="tablist" aria-label="媒体类别">
+          <button class="tab active" data-view="songs" role="tab" aria-selected="true">歌曲</button>
+          <button class="tab" data-view="albums" role="tab" aria-selected="false">专辑</button>
+        </div>
+
+        <section id="songs" class="view active-view" role="tabpanel">
+          <div class="library-head">
+            <div><p class="count" id="songCount">共 0 首歌曲</p><h2 id="songsTitle">全部歌曲</h2></div>
+            <div class="library-actions">
+              <button class="secondary-button" id="backToAll" type="button" style="display:none"><span>←</span> 返回全部</button>
+              <button class="primary-button" id="playAll" type="button"><span>▶</span> 播放全部</button>
+              <button class="secondary-button" id="shuffle" type="button"><span>↯</span> 随机播放</button>
+              <button class="secondary-button" id="selectToggle" type="button" style="display:none"><span>☑</span> 选择</button>
+              <button class="sort-button" type="button"><span>≡</span> 按修改时间 <span class="chevron">⌄</span></button>
+            </div>
+          </div>
+          <div class="song-list" id="songList"></div>
+        </section>
+
+        <section id="albums" class="view" role="tabpanel">
+          <div class="library-head albums-head"><div><p class="count" id="albumCount">共 0 张专辑</p><h2>全部专辑</h2></div></div>
+          <div class="album-grid" id="albumGrid"></div>
+        </section>
+
+        <section id="playlists" class="view" role="tabpanel">
+          <div class="library-head">
+            <div><p class="count" id="playlistCount">共 0 个歌单</p><h2>我的歌单</h2></div>
+            <div class="library-actions">
+              <button class="primary-button" id="newPlaylistBtn" type="button"><span>+</span> 新建歌单</button>
+            </div>
+          </div>
+          <div class="inline-create" id="inlineCreate" style="display:none">
+            <input id="inlineCreateName" type="text" placeholder="输入歌单名称，回车确认" maxlength="30" autocomplete="off" />
+            <button class="primary-button" id="inlineCreateOk" type="button">创建</button>
+            <button class="secondary-button" id="inlineCreateCancel" type="button">取消</button>
+          </div>
+          <div class="playlist-grid" id="playlistGrid"></div>
+        </section>
+
+        <section id="playlistDetail" class="view" role="tabpanel">
+          <div class="library-head">
+            <div><p class="count" id="plDetailCount"></p><h2 id="plDetailTitle">歌单</h2></div>
+            <div class="library-actions">
+              <button class="secondary-button" id="plBack" type="button"><span>←</span> 返回歌单</button>
+              <button class="secondary-button pl-danger" id="plDelete" type="button"><span>🗑</span> 删除歌单</button>
+            </div>
+          </div>
+          <div class="song-list" id="plSongList"></div>
+        </section>
+
+        <section id="cdlib" class="view" role="tabpanel">
+          <div class="library-head">
+            <div><p class="count" id="cdAlbumCount">共 0 张专辑</p><h2>CD 专辑</h2></div>
+          </div>
+          <div class="cd-album-grid" id="cdAlbumGrid"></div>
+        </section>
+
+        <section id="cdAlbumDetail" class="view" role="tabpanel">
+          <div class="cd-detail-head">
+            <div class="cd-detail-cover" id="cdDetailCover"></div>
+            <div class="cd-detail-info">
+              <p class="cd-detail-kicker">专辑</p>
+              <h2 id="cdDetailTitle">专辑</h2>
+              <p class="cd-detail-artist" id="cdDetailArtist">—</p>
+              <div class="cd-detail-tags" id="cdDetailTags"></div>
+              <p class="cd-detail-desc" id="cdDetailDesc"></p>
+            </div>
+            <button class="secondary-button cd-back" id="cdBack" type="button"><span>←</span> 返回CD库</button>
+          </div>
+          <div class="cd-track-actions">
+            <button class="primary-button" id="cdPlayAll" type="button"><span>▶</span> 播放CD音轨</button>
+          </div>
+          <div class="cd-track-list" id="cdTrackList"></div>
+        </section>
+      </section>
+    </main>
+
+    <div class="select-bar" id="selectBar" style="display:none">
+      <span class="select-count" id="selectCount">已选 0 首</span>
+      <button class="primary-button" id="addToPlaylistBtn" type="button"><span>+</span> 加入歌单</button>
+      <button class="secondary-button" id="selectCancel" type="button">取消</button>
+    </div>
+
+    <div class="player" aria-label="播放栏占位">
+      <div class="now-playing"><div><strong id="nowTitle">未选择歌曲</strong><span id="nowArtist">—</span></div><button class="like" id="currentFavorite" type="button" aria-label="收藏">♡</button></div>
+      <div class="player-center"><div class="controls"><button id="previousButton" type="button" aria-label="上一首">↶</button><button class="play-toggle" id="playToggle" type="button" aria-label="播放">▶</button><button id="nextButton" type="button" aria-label="下一首">↷</button></div></div>
+      <div class="player-tools"><button class="now-playing-btn" id="playerJumpToNow" type="button" title="跳到正在播放的歌曲"><svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor" aria-hidden="true"><rect x="1" y="5" width="3" height="6" rx="1"/><rect x="6.5" y="2" width="3" height="12" rx="1"/><rect x="12" y="7" width="3" height="2" rx="1"/></svg><span>正在播放</span></button></div>
+    </div>
+
+    <section class="settings-overlay" id="settingsOverlay" aria-hidden="true">
+      <div class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+        <aside class="settings-nav">
+          <div class="settings-nav-top"><span class="settings-kicker">系统设置</span><h2 id="settingsTitle">设置</h2></div>
+          <button class="settings-nav-item active" data-settings-tab="media" type="button"><span>▣</span>媒体库</button>
+          <button class="settings-nav-item" data-settings-tab="cdlib" type="button"><span><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6.5" fill="#161719"/><circle cx="12" cy="12" r="2.6" fill="currentColor"/></svg></span>CD库</button>
+          <button class="settings-nav-item" data-settings-tab="transcode" type="button"><span>⚡</span>转码设置</button>
+          <button class="settings-nav-item" data-settings-tab="ui" type="button"><span>◐</span>界面</button>
+          <div class="settings-nav-future" aria-hidden="true"></div>
+          <p class="settings-nav-hint">更多设置将在后续添加</p>
+        </aside>
+        <div class="settings-content">
+          <header class="settings-header"><div><span class="settings-kicker">内容管理</span><h2>媒体库</h2></div><button class="close-settings" id="closeSettings" type="button" aria-label="关闭设置">×</button></header>
+          <div class="settings-body">
+            <section class="setting-card" data-settings-panel="media">
+              <div class="card-icon">♬</div>
+              <div class="card-copy"><h3>音乐媒体库</h3><p>指定保存音乐文件的本地目录，扫描后将自动建立歌曲与专辑索引。</p></div>
+              <label class="field-label" for="mediaPath">媒体库路径</label>
+              <div class="path-field"><input id="mediaPath" type="text" placeholder="例如：/home/music" autocomplete="off" /></div>
+              <p class="field-help">支持服务器本地目录。请确保服务程序拥有此目录的读取权限。</p>
+              <button class="scan-button" id="scanButton" type="button"><span>⌕</span> 开始扫描</button>
+              <p class="scan-status" id="scanStatus" role="status"></p>
+            </section>
+            <section class="setting-card" data-settings-panel="cdlib" style="display:none">
+              <div class="card-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6.5" fill="#b8f43f"/><circle cx="12" cy="12" r="2.6" fill="currentColor"/></svg></div>
+              <div class="card-copy"><h3>CD 音乐库</h3><p>将整张 CD 按文件夹整理，每个第一层子文件夹视为一张专辑，专辑内直接文件作为曲目。</p></div>
+              <label class="field-label" for="cdMediaPath">CD库路径</label>
+              <div class="path-field"><input id="cdMediaPath" type="text" placeholder="例如：/home/cds" autocomplete="off" /></div>
+              <p class="field-help">只扫描路径下的第一层子文件夹，子文件夹的子文件夹不会计入。专辑封面优先读取文件夹内 cover.jpg。</p>
+              <button class="scan-button" id="cdScanButton" type="button"><span>⌕</span> 开始扫描</button>
+              <p class="scan-status" id="cdScanStatus" role="status"></p>
+            </section>
+            <section class="setting-card" data-settings-panel="transcode" style="display:none">
+              <div class="card-icon">⚡</div>
+              <div class="card-copy"><h3>转码播放</h3><p>高码率音源（&gt;400kbps）播放时按需转码，节省带宽；转码文件自动缓存，滚动淘汰。</p></div>
+              <label class="field-label" for="transcodeToggle">转码播放</label>
+              <div class="toggle-row"><span>开启转码播放</span><label class="switch"><input type="checkbox" id="transcodeToggle" /><span class="slider"></span></label></div>
+              <div id="transcodeOptions" style="display:none">
+                <label class="field-label">目标格式</label>
+                <div class="option-group" id="transcodeFormat">
+                  <button type="button" class="option-btn" data-value="aac">AAC</button>
+                  <button type="button" class="option-btn" data-value="mp3">MP3</button>
+                </div>
+                <label class="field-label">码率</label>
+                <div class="option-group" id="transcodeBitrate">
+                  <button type="button" class="option-btn" data-value="64">64k</button>
+                  <button type="button" class="option-btn" data-value="96">96k</button>
+                  <button type="button" class="option-btn" data-value="128">128k</button>
+                  <button type="button" class="option-btn" data-value="192">192k</button>
+                  <button type="button" class="option-btn" data-value="256">256k</button>
+                  <button type="button" class="option-btn" data-value="320">320k</button>
+                </div>
+                <label class="field-label" for="transcodeCacheDir">缓存位置</label>
+                <select id="transcodeCacheDir" class="transcode-select">
+                  <option value="">程序目录 transcode</option>
+                  <option value="/tmp/transcode">/tmp/transcode</option>
+                </select>
+                <label class="field-label" for="transcodeCacheSize">缓存大小</label>
+                <select id="transcodeCacheSize" class="transcode-select">
+                  <option value="0.5">512 MB</option>
+                  <option value="1">1 GB</option>
+                  <option value="2">2 GB</option>
+                  <option value="4">4 GB</option>
+                  <option value="8">8 GB</option>
+                </select>
+                <label class="field-label">缓存占用</label>
+                <div class="cache-info-row"><span id="transcodeCacheInfo">—</span><button class="secondary-button cache-clear" id="transcodeCacheClear" type="button">清空缓存</button></div>
+              </div>
+            <div class="transcode-save-row"><button type="button" class="primary-button" id="transcodeSave"><span>✓</span> 保存并应用</button><span class="transcode-dirty" id="transcodeDirty" style="display:none">有未保存的更改</span></div>
+            </section>
+            <section class="setting-card" data-settings-panel="ui" style="display:none">
+              <div class="card-icon">◐</div>
+              <div class="card-copy"><h3>界面外观</h3><p>切换播放器的明暗主题，选择即时生效并自动记住。</p></div>
+              <label class="field-label" for="themeToggle">主题</label>
+              <div class="toggle-row"><span id="themeLabel">亮色</span><label class="switch"><input type="checkbox" id="themeToggle" /><span class="slider"></span></label></div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="search-overlay" id="searchOverlay" aria-hidden="true">
+      <div class="search-panel">
+        <div class="search-bar">
+          <span class="search-icon">⌕</span>
+          <input id="searchInput" type="text" placeholder="搜索歌名" autocomplete="off" spellcheck="false" />
+          <button class="search-clear" id="searchClear" type="button" aria-label="清空">×</button>
+        </div>
+        <p class="search-meta" id="searchMeta">输入歌名开始搜索</p>
+        <div class="search-results" id="searchResults"></div>
+      </div>
+    </section>
+
+    <section class="playlist-picker-overlay" id="playlistPicker" aria-hidden="true">
+      <div class="playlist-picker-panel" role="dialog" aria-modal="true" aria-labelledby="ppTitle">
+        <header class="pp-header"><h3 id="ppTitle">加入歌单</h3><button class="pp-close" id="ppClose" type="button" aria-label="关闭">×</button></header>
+        <div class="pp-new">
+          <input id="ppNewName" type="text" placeholder="新建歌单名称…" maxlength="30" autocomplete="off" />
+          <button class="primary-button" id="ppNewBtn" type="button">创建并加入</button>
+        </div>
+        <div class="pp-list" id="ppList"></div>
+        <p class="pp-empty" id="ppEmpty">还没有歌单，在上方输入名称创建一个吧</p>
+      </div>
+    </section>
+
+    <section class="lyrics-view" id="lyricsView" aria-hidden="true">
+      <button class="lyrics-back" id="lvClose" type="button" aria-label="返回音乐库"><svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
+      <button class="lyrics-back-btn" id="lvBackToAlbum" type="button" style="display:none">返回专辑列表</button>
+      <div class="lv-body">
+        <div class="lv-cover">
+          <img id="lvCoverImg" alt="">
+          <div class="lv-info">
+          <div class="lv-title" id="lvTitle">未选择歌曲</div>
+          <div class="lv-artist" id="lvArtist">—</div>
+          <div class="lv-album" id="lvAlbum">—</div>
+          <div class="lv-prog">
+            <span class="lv-prog-t" id="lvProgCur">0:00</span>
+            <div class="lv-prog-bar" id="lvProgBar"><div class="lv-prog-fill" id="lvProgFill"></div><div class="lv-knob" id="lvProgKnob"></div></div>
+            <span class="lv-prog-t" id="lvProgDur">0:00</span>
+          </div>
+          <div class="lv-controls">
+            <button class="lv-cbtn" id="lvQueue" type="button" aria-label="播放列表" title="播放列表"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z"/></svg></button>
+            <button class="lv-cbtn" id="lvPrev" type="button" aria-label="上一首"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
+            <button class="lv-cbtn play" id="lvPlay" type="button" aria-label="播放"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+            <button class="lv-cbtn" id="lvNext" type="button" aria-label="下一首"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
+            <button class="lv-cbtn" id="lvShuffle" type="button" aria-label="随机播放" title="随机播放"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg></button>
+          </div>
+          </div>
+        </div>
+        <div class="lv-scroll" id="lvScroll"><div class="lv-lines" id="lvLines"><p class="no-lyrics">播放歌曲后将在这里显示歌词</p></div></div>
+      </div>
+      <div class="lv-queue-overlay" id="lvQueueOverlay" aria-hidden="true">
+        <div class="lv-queue-panel" role="dialog" aria-modal="true" aria-labelledby="lvQueueTitle">
+          <header class="lv-queue-head"><h3 id="lvQueueTitle">播放列表</h3><div class="lv-queue-head-actions"><button class="lv-queue-focus" id="lvQueueFocus" type="button" title="滚动到当前播放的歌曲">◎ 聚焦至当前歌曲</button><button class="lv-queue-close" id="lvQueueClose" type="button" aria-label="关闭">×</button></div></header>
+          <div class="lv-queue-list" id="lvQueueList"></div>
+        </div>
+      </div>
+    </section>
+    <script src="app.js"></script>
+  </body>
+</html>

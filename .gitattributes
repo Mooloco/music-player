@@ -1,0 +1,16 @@
+# 行尾策略:所有文本文件仓库内一律 LF(防 Windows autocrlf 污染,部署源码需逐字节一致)
+* text=auto
+*.py    text eol=lf
+*.js    text eol=lf
+*.html  text eol=lf
+*.css   text eol=lf
+*.md    text eol=lf
+*.yml   text eol=lf
+*.json  text eol=lf
+*.svg   text eol=lf
+Dockerfile        text eol=lf
+.gitignore        text eol=lf
+.gitattributes    text eol=lf
+*.png   binary
+*.woff2 binary
+*.ico   binary
