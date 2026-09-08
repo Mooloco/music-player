@@ -62,15 +62,15 @@ python server.py        # 或 python3 server.py
 镜像内置 Python + mutagen + ffmpeg（转码开箱即用，AAC/MP3 编码均已验证），数据与音乐库通过卷挂载：
 
 ```bash
-# 构建双架构镜像(镜像发布到 Docker Hub 后可直接 docker pull mooloco/music-player:1.1)
-# docker buildx build --platform linux/amd64,linux/arm64 -t mooloco/music-player:1.1 .
+# 构建双架构镜像(镜像发布到 Docker Hub 后可直接 docker pull mooloco/music-player:V1.1)
+# docker buildx build --platform linux/amd64,linux/arm64 -t mooloco/music-player:V1.1 .
 
 docker run -d --name music-player --restart unless-stopped -p 8090:8090 \
   -e MUSIC_LIBRARY_PATH=/music -e MUSIC_CDLIB_PATH=/tracker \
   -v music_data:/data \
   -v /path/to/music:/music:ro \
   -v /path/to/tracker:/tracker:ro \
-  mooloco/music-player:1.1
+  mooloco/music-player:V1.1
 ```
 
 - 首次启动若设置了 `MUSIC_LIBRARY_PATH` / `MUSIC_CDLIB_PATH` 且 `/data` 卷中无库文件，将**后台自动扫描**；此后重启不会重扫（索引已持久化在卷里）

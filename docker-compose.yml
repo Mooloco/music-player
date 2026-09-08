@@ -3,10 +3,10 @@
 #   或 docker run -d --name music-player --restart unless-stopped -p 8090:8090 \
 #       -e MUSIC_LIBRARY_PATH=/music -e MUSIC_CDLIB_PATH=/tracker \
 #       -v music_data:/data -v /mnt/wd200/music:/music:ro -v /mnt/wd200/tracker:/tracker:ro \
-#       mooloco/music-player:latest
+#       mooloco/music-player:V1.1
 services:
   music-player:
-    image: mooloco/music-player:latest
+    image: mooloco/music-player:V1.1
     build: .
     container_name: music-player
     restart: unless-stopped
